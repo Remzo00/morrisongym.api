@@ -59,6 +59,13 @@ builder.Services.AddDbContext<DataContext>(options =>
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<DataContext>();
+    db.Database.Migrate();
+}
+
+
 // Configure the HTTP request pipeline.
 app.UseSwagger();
 app.UseSwaggerUI(c => c.SwaggerEndpoint("v1/swagger.json", "morrison_gym API v1"));
