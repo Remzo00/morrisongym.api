@@ -16,6 +16,6 @@ namespace Morrison_Gym.API.Models
         public string Email { get; set; } = string.Empty;
         public int RoleId { get; set; }
         public Role Role { get; set; } = new();
-        public Guid UserCode { get; set; }
+        public Guid UserCode { get; set; } = Guid.Empty;
     }
 }

@@ -85,22 +85,19 @@ namespace Morrison_Gym.API.Services.CoachService
         {            
             try
             {
-                var coach = _dbContext.Coaches?.First(x => x.Id == id);
+                var coach = _dbContext.Coaches?.SingleOrDefault(x => x.Id == id);
                 if (coach != null)
                 {
                     _dbContext.Coaches?.Remove(coach);
                     await _dbContext.SaveChangesAsync();                   
                     return true;
-                }
-                else
-                {
-                    throw new ArgumentNullException();
-                }
+                }               
             }
             catch(Exception ex)
             {
                 throw new Exception(ex.Message);
             }
+            return false;
         }
 
 

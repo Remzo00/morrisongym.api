@@ -8,7 +8,7 @@ namespace Morrison_Gym.API.Data
         public DataContext(DbContextOptions<DataContext> options) : base(options){}
 
         public DbSet<User>? Users { get; set; }
-        public DbSet<Role>? Admins { get; set; }
+        public DbSet<Role>? Roles { get; set; }
         public DbSet<Coach>? Coaches { get; set; }
         public DbSet<Customer>? Customers { get; set; }
 
@@ -26,8 +26,19 @@ namespace Morrison_Gym.API.Data
                 {
                     Id = 2,
                     Name = "Coach"
+                },
+                new Role()
+                {
+                    Id = 3,
+                    Name = "User"
+                },
+                new Role()
+                {
+                    Id = 4,
+                    Name = "Customer"
                 }
-         );         
+         );
+            
         }
     }
 }

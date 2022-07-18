@@ -79,22 +79,19 @@ namespace Morrison_Gym.API.Services.UserService
         {            
             try
             {
-                var user = _dbContext.Users?.First(x => x.Id == id);
+                var user = _dbContext.Users?.SingleOrDefault(x => x.Id == id);
                 if (user != null)
                 {
                     _dbContext.Users?.Remove(user);
                     await _dbContext.SaveChangesAsync();                    
                     return true;
-                }
-                else
-                {
-                    throw new ArgumentNullException();
-                }
+                }                
             }
             catch(Exception ex)
             {
                 throw new Exception(ex.Message);
             }
+            return false;
         }
 
         public async Task<ResponseDto> UpdateUser(UserDto request)

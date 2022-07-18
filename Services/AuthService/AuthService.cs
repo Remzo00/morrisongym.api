@@ -27,7 +27,7 @@ namespace Morrison_Gym.API.Services.AuthService
             ResponseDto response = new();
             try
             {
-                User? user = await _dataContext.Users.FirstOrDefaultAsync(x => x.UserCode == code);
+                User? user = await _dataContext.Users.SingleOrDefaultAsync(x => x.UserCode == code);
                 if(user == null)
                 {
                     response.Success = false;
@@ -62,7 +62,7 @@ namespace Morrison_Gym.API.Services.AuthService
 
         private async Task<string> CreateToken(User user)
         {
-            var role = await _dataContext.Admins.FindAsync(user.RoleId);
+            var role = await _dataContext.Roles.FindAsync(user.RoleId);
             List<Claim> claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),

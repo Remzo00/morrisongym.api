@@ -49,7 +49,7 @@ namespace Morrison_Gym.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddUser(CoachDto coachDto)
+        public async Task<IActionResult> AddCoach(CoachDto coachDto)
         {
             try
             {
