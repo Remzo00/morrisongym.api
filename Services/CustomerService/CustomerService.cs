@@ -103,22 +103,19 @@ namespace Morrison_Gym.API.Services.CustomerService
         {            
             try
             {
-                var customer = _dbContext.Customers?.First(x => x.Id == id);
+                var customer = _dbContext.Customers?.SingleOrDefault(x => x.Id == id);
                 if (customer != null)
                 {
                     _dbContext.Customers?.Remove(customer);
                     await _dbContext.SaveChangesAsync();                 
                     return true;
-                }
-                else
-                {
-                    throw new ArgumentNullException();
-                }
+                }               
             }
             catch(Exception ex)
             {
                 throw new Exception(ex.Message);
             }
+            return false;
         }     
        
     }

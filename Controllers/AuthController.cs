@@ -31,5 +31,23 @@ namespace Morrison_Gym.API.Controllers
             }
             return Ok(_response);
         } 
+
+        [HttpPost("Login")]
+        public async Task<IActionResult> Login(Guid request)
+        {
+            try
+            {
+                _response = await _authService.Login(request);
+                if (!_response.Success)
+                {
+                    return BadRequest(_response);
+                }
+            }catch (Exception ex)
+            {
+                _response.Success = false;
+                _response.ErrorMessages = new List<string>() { ex.ToString() };
+            }
+            return Ok(_response);
+        }
     }
 }
