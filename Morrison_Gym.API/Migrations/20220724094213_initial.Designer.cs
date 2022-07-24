@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Morrison_Gym.API.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20220722171834_Initial")]
-    partial class Initial
+    [Migration("20220724094213_initial")]
+    partial class initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
