@@ -7,17 +7,10 @@ namespace Morrison_Gym.API.Data
     {
         public DataContext(DbContextOptions<DataContext> options) : base(options){}
 
-<<<<<<< HEAD:Data/DataContext.cs
-        public DbSet<User>? Users { get; set; }
-        public DbSet<Role>? Roles { get; set; }
-        public DbSet<Coach>? Coaches { get; set; }
-        public DbSet<Customer>? Customers { get; set; }
-=======
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<Coach> Coaches { get; set; }
         public DbSet<Customer> Customers { get; set; }
->>>>>>> main:Morrison_Gym.API/Data/DataContext.cs
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -37,11 +30,7 @@ namespace Morrison_Gym.API.Data
                 new Role()
                 {
                     Id = 3,
-<<<<<<< HEAD:Data/DataContext.cs
-                    Name = "User"
-=======
                     Name = "Worker"
->>>>>>> main:Morrison_Gym.API/Data/DataContext.cs
                 },
                 new Role()
                 {
