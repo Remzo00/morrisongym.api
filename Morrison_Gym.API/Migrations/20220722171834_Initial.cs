@@ -11,19 +11,6 @@ namespace Morrison_Gym.API.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Admins",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Name = table.Column<string>(type: "text", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Admins", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Customers",
                 columns: table => new
                 {
@@ -39,6 +26,19 @@ namespace Morrison_Gym.API.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Customers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Roles",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Name = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Roles", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -58,9 +58,9 @@ namespace Morrison_Gym.API.Migrations
                 {
                     table.PrimaryKey("PK_Users", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Users_Admins_RoleId",
+                        name: "FK_Users_Roles_RoleId",
                         column: x => x.RoleId,
-                        principalTable: "Admins",
+                        principalTable: "Roles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -89,12 +89,14 @@ namespace Morrison_Gym.API.Migrations
                 });
 
             migrationBuilder.InsertData(
-                table: "Admins",
+                table: "Roles",
                 columns: new[] { "Id", "Name" },
                 values: new object[,]
                 {
                     { 1, "Admin" },
-                    { 2, "Coach" }
+                    { 2, "Coach" },
+                    { 3, "Worker" },
+                    { 4, "Customer" }
                 });
 
             migrationBuilder.CreateIndex(
@@ -120,7 +122,7 @@ namespace Morrison_Gym.API.Migrations
                 name: "Users");
 
             migrationBuilder.DropTable(
-                name: "Admins");
+                name: "Roles");
         }
     }
 }

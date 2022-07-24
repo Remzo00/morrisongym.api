@@ -27,13 +27,14 @@ namespace Morrison_Gym.API.Services.AuthService
             ResponseDto response = new();
             try
             {
-                User? user = await _dataContext.Users.SingleOrDefaultAsync(x => x.UserCode == code);
+                var user = await _dataContext.Users.SingleOrDefaultAsync(x => x.UserCode == code);
                 if(user == null)
                 {
                     response.Success = false;
                     response.Message = "User not found";
                 }
-                response.Result = await CreateToken(user);
+
+                if (user != null) response.Result = await CreateToken(user);
                 return response;
             }catch (Exception ex)
             {
@@ -49,10 +50,13 @@ namespace Morrison_Gym.API.Services.AuthService
             try
             {
                 var user = _mapper.Map<User>(userDto);
-                await _dataContext.Users.AddAsync(user);
+                user.Role = await _dataContext.Roles.SingleOrDefaultAsync((x => x.Id == user.RoleId));
+                user.UserCode = Guid.NewGuid();
+                _dataContext.Users.Add(user);
                 await _dataContext.SaveChangesAsync();
                 return response;
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 response.Success = false;
                 response.ErrorMessages = new List<string> { ex.ToString() };
@@ -62,25 +66,27 @@ namespace Morrison_Gym.API.Services.AuthService
 
         private async Task<string> CreateToken(User user)
         {
-            var role = await _dataContext.Roles.FindAsync(user.RoleId);
-            List<Claim> claims = new List<Claim>
+            var role = await _dataContext.Roles.SingleOrDefaultAsync(x => x.Id == user.RoleId);
+            var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                 new Claim(ClaimTypes.Name, user.UserName),
-                new Claim(ClaimTypes.Role, role.Name)
+                new Claim(ClaimTypes.Name, user.UserName),
             };
-            SymmetricSecurityKey key = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(_configuration.GetSection("Jwt:Key").Value)
-          );
-            SigningCredentials creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
-            SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor
+
+            if (role != null) claims.Add(new Claim(ClaimTypes.Role, role.Name));
+
+            var key = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(_configuration.GetSection("Jwt:Key").Value));
+
+            var signingCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+            var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.Now.AddDays(1),
-                SigningCredentials = creds
+                SigningCredentials = signingCredentials,
             };
-            JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
-            SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.CreateToken(tokenDescriptor);
 
             return tokenHandler.WriteToken(token);
         }
