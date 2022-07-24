@@ -7,7 +7,6 @@ namespace Morrison_Gym.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles ="Coach")]
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
@@ -20,6 +19,7 @@ namespace Morrison_Gym.API.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Coach")]
         public async Task<IActionResult> Get()
         {
             try

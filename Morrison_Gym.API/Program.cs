@@ -72,6 +72,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
+<<<<<<< HEAD:Program.cs
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateLifetime = true,
@@ -82,6 +83,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+=======
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+        };
+    });
+>>>>>>> main:Morrison_Gym.API/Program.cs
 
 var app = builder.Build();
 
@@ -91,7 +101,10 @@ using (var scope = app.Services.CreateScope())
     db.Database.Migrate();
 }
 
+<<<<<<< HEAD:Program.cs
 
+=======
+>>>>>>> main:Morrison_Gym.API/Program.cs
 // Configure the HTTP request pipeline.
 app.UseSwagger();
 app.UseSwaggerUI(c => c.SwaggerEndpoint("v1/swagger.json", "morrison_gym API v1"));
