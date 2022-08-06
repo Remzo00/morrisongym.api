@@ -19,7 +19,7 @@ namespace Morrison_Gym.API.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Coach")]
+        [Authorize(Roles = "Admin,Coach")]
         public async Task<IActionResult> Get()
         {
             try
