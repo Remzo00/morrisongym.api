@@ -8,7 +8,7 @@ namespace Morrison_Gym.API.Services.CoachService
         Task<ResponseDto> GetCoaches();
         Task<ResponseDto> GetCoachData(int id);
         Task<ResponseDto> AddCoach(CoachDto request);
-        Task<ResponseDto> UpdateCoach(CoachDto request);
+        Task<ResponseDto> UpdateCoach(CoachDto request, int id);
         Task<bool> DeleteCoach(int id);
     }
 }

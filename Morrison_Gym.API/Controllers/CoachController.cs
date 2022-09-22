@@ -65,11 +65,11 @@ namespace Morrison_Gym.API.Controllers
         }
 
         [HttpPut]
-        public async Task<IActionResult> UpdateCoach(CoachDto coachDto)
+        public async Task<IActionResult> UpdateCoach(CoachDto coachDto, int id)
         {
             try
             {
-                _responseDto = await _coachService.UpdateCoach(coachDto);
+                _responseDto = await _coachService.UpdateCoach(coachDto, id);
             }
             catch (Exception ex)
             {

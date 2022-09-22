@@ -101,15 +101,17 @@ namespace Morrison_Gym.API.Services.CoachService
         }
 
 
-        public async Task<ResponseDto> UpdateCoach(CoachDto request)
-        {
-            ResponseDto response = new();
-            var coach = _mapper.Map<Coach>(request);
+        public async Task<ResponseDto> UpdateCoach(CoachDto request, int id)
+        {            
+            ResponseDto response = new();            
             try
             {
-                if (coach != null)
-                {
+                var coach = await _dbContext.Coaches.FindAsync(id);             
+                coach = _mapper.Map<Coach>(request);
+                if (coach == null)
+                {                    
                     response.Success = true;
+                    coach.Id = id;
                     _dbContext.Coaches?.Update(coach);
                     await _dbContext.SaveChangesAsync();
                     return response;
