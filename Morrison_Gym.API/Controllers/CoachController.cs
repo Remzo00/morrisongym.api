@@ -1,5 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Morrison_Gym.API.Models.Dto;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
+using Morrison_Gym.API.Dto;
+using Morrison_Gym.API.Entities;
+using Morrison_Gym.API.Dto;
 using Morrison_Gym.API.Services.CoachService;
 
 namespace Morrison_Gym.API.Controllers
@@ -10,11 +13,13 @@ namespace Morrison_Gym.API.Controllers
     {
         private readonly ICoachService _coachService;
         private ResponseDto _responseDto;
+        private readonly IMapper _mapper;
 
-        public CoachController(ICoachService coachService)
+        public CoachController(ICoachService coachService, IMapper mapper)
         {
             _coachService = coachService;
             _responseDto = new ResponseDto();
+            _mapper = mapper;
         }
 
         [HttpGet]
@@ -22,7 +27,8 @@ namespace Morrison_Gym.API.Controllers
         {
             try
             {
-                _responseDto = await _coachService.GetCoaches();
+                var coaches = await _coachService.GetCoaches();
+                _responseDto.Result = _mapper.Map<IList<CoachDto>>(coaches);
             }
             catch
             {
@@ -37,7 +43,8 @@ namespace Morrison_Gym.API.Controllers
         {
             try
             {
-                _responseDto = await _coachService.GetCoachData(id);
+                var coach = await _coachService.GetCoaches();
+                _responseDto.Result = _mapper.Map<CoachDto>(coach);
             }
             catch (Exception ex)
             {
@@ -49,11 +56,20 @@ namespace Morrison_Gym.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddCoach(CoachDto coachDto)
+        public async Task<IActionResult> AddCoach(CoachCreateDto coachDto)
         {
             try
             {
-                _responseDto = await _coachService.AddCoach(coachDto);
+                if (coachDto == null)
+                {
+                    return BadRequest(ModelState);
+                }
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                var coach = _mapper.Map<Coach>(coachDto);
+                _responseDto.Result = await _coachService.AddCoach(coach);
             }
             catch (Exception ex)
             {
@@ -65,11 +81,26 @@ namespace Morrison_Gym.API.Controllers
         }
 
         [HttpPut]
-        public async Task<IActionResult> UpdateCoach(CoachDto coachDto, int id)
+        [HttpGet("{id}")]
+        public async Task<IActionResult> UpdateCoach(int id, CoachUpdateDto coachDto)
         {
             try
             {
-                _responseDto = await _coachService.UpdateCoach(coachDto, id);
+                if (id < 1 || coachDto == null || id != coachDto.Id)
+                {
+                    return BadRequest();
+                }
+                var isExists = await _coachService.isExists(id);
+                if (!isExists)
+                {
+                    return NotFound();
+                }
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                var coach = _mapper.Map<Coach>(coachDto);
+                _responseDto.Result = await _coachService.UpdateCoach(coach);
             }
             catch (Exception ex)
             {
@@ -81,11 +112,24 @@ namespace Morrison_Gym.API.Controllers
         }
 
         [HttpDelete]
+        [HttpGet("{id}")]
         public async Task<IActionResult> DeleteCoach(int id)
         {
             try
             {
-                _responseDto.Success = await _coachService.DeleteCoach(id);
+                if (id < 1)
+                {
+                    return BadRequest();
+                }
+                var isExists = await _coachService.isExists(id);
+                if (!isExists)
+                {
+                    return NotFound();
+                }
+                var coach = await _coachService.GetCoachById(id);
+                var coachForDelete = _mapper.Map<Coach>(coach.Result);
+                _responseDto.Success = await _coachService.DeleteCoach(coachForDelete);
+                return NoContent();
             }
             catch (Exception ex)
             {
@@ -93,7 +137,6 @@ namespace Morrison_Gym.API.Controllers
                 _responseDto.ErrorMessages = new List<string> { ex.ToString() };
                 return BadRequest(_responseDto);
             }
-            return Ok(_responseDto);
         }
 
     }

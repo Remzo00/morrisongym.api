@@ -1,14 +1,15 @@
-﻿using Morrison_Gym.API.Models;
-using Morrison_Gym.API.Models.Dto;
+﻿using Morrison_Gym.API.Dto;
+using Morrison_Gym.API.Entities;
 
 namespace Morrison_Gym.API.Services.CoachService
 {
     public interface ICoachService
     {
         Task<ResponseDto> GetCoaches();
-        Task<ResponseDto> GetCoachData(int id);
-        Task<ResponseDto> AddCoach(CoachDto request);
-        Task<ResponseDto> UpdateCoach(CoachDto request, int id);
-        Task<bool> DeleteCoach(int id);
+        Task<ResponseDto> GetCoachById(int id);
+        Task<ResponseDto> AddCoach(Coach entity);
+        Task<ResponseDto> UpdateCoach(Coach entity);
+        Task<bool> DeleteCoach(Coach entity);
+        Task<bool> isExists(int id);
     }
 }

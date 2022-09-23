@@ -1,4 +1,4 @@
-﻿namespace Morrison_Gym.API.Models.Dto
+﻿namespace Morrison_Gym.API.Dto
 {
     public class ResponseDto
     {
