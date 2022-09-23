@@ -1,4 +1,4 @@
-﻿using Morrison_Gym.API.Models;
+﻿using Morrison_Gym.API.Dto;
 using Morrison_Gym.API.Models.Dto;
 
 namespace Morrison_Gym.API.Services.UserService

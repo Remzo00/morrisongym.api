@@ -2,11 +2,14 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Morrison_Gym.API.Data;
+using Morrison_Gym.API.Dto;
+using Morrison_Gym.API.Entities;
 using Morrison_Gym.API.Models;
-using Morrison_Gym.API.Models.Dto;
+using Morrison_Gym.API.Dto;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Morrison_Gym.API.Models.Dto;
 
 namespace Morrison_Gym.API.Services.AuthService
 {

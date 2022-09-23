@@ -1,4 +1,4 @@
-﻿namespace Morrison_Gym.API.Models
+﻿namespace Morrison_Gym.API.Entities
 {
     public class Role
     {

@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Morrison_Gym.API.Dto;
+using Morrison_Gym.API.Dto;
 using Morrison_Gym.API.Models.Dto;
 using Morrison_Gym.API.Services.CustomerService;
 

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
-using Morrison_Gym.API.Models;
+using Morrison_Gym.API.Dto;
+using Morrison_Gym.API.Entities;
 using Morrison_Gym.API.Models.Dto;
 
 namespace Morrison_Gym.API
@@ -10,6 +11,8 @@ namespace Morrison_Gym.API
         {
             CreateMap<User, UserDto>().ReverseMap();
             CreateMap<Coach, CoachDto>().ReverseMap();
+            CreateMap<Coach, CoachCreateDto>().ReverseMap();
+            CreateMap<Coach, CoachUpdateDto>().ReverseMap();
             CreateMap<Customer, CustomerDto>().ReverseMap();
         }
     }

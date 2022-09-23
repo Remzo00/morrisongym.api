@@ -1,21 +1,18 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Morrison_Gym.API.Data;
-using Morrison_Gym.API.Models;
-using Morrison_Gym.API.Models.Dto;
+using Morrison_Gym.API.Dto;
+using Morrison_Gym.API.Entities;
 
 namespace Morrison_Gym.API.Services.CoachService
 {
     public class CoachService : ICoachService
     {
         private readonly DataContext _dbContext;
-        private readonly IMapper _mapper;
 
-        public CoachService(DataContext dbContext, IMapper mapper)
+        public CoachService(DataContext dbContext)
         {
             _dbContext = dbContext;
-            _mapper = mapper;
-
         }
 
         //To get all coaches details
@@ -23,10 +20,8 @@ namespace Morrison_Gym.API.Services.CoachService
         {
             ResponseDto response = new();
             try
-            {                
-                var coaches = await _dbContext.Coaches.ToListAsync();
-                response.Success = true;
-                response.Result = _mapper.Map<List<CoachDto>>(coaches);
+            {
+                response.Result = await _dbContext.Coaches.ToListAsync();
                 return response;
             }
             catch (Exception ex)
@@ -38,7 +33,7 @@ namespace Morrison_Gym.API.Services.CoachService
         }
 
         //Get the details of a particular coach
-        public async Task<ResponseDto> GetCoachData(int id)
+        public async Task<ResponseDto> GetCoachById(int id)
         {
             ResponseDto response = new();
             try
@@ -48,8 +43,7 @@ namespace Morrison_Gym.API.Services.CoachService
                 {
                     response.Message = "User not found.";
                 }
-                response.Success = true;
-                response.Result = _mapper.Map<CoachDto>(coach);
+                response.Result = coach;
                 return response;
             }
             catch (Exception ex)
@@ -61,14 +55,12 @@ namespace Morrison_Gym.API.Services.CoachService
         }
 
         //Add Coach
-        public async Task<ResponseDto> AddCoach(CoachDto request)
+        public async Task<ResponseDto> AddCoach(Coach entity)
         {
             ResponseDto response = new();
             try
             {                
-                var coach = _mapper.Map<Coach>(request);
-                response.Success = true;                
-                _dbContext.Coaches?.Add(coach);
+                _dbContext.Coaches.Add(entity);
                 await _dbContext.SaveChangesAsync();
                 return response;
             }
@@ -81,41 +73,28 @@ namespace Morrison_Gym.API.Services.CoachService
         }
 
         //Deleting Coach
-        public async Task<bool> DeleteCoach(int id)
+        public async Task<bool> DeleteCoach(Coach entity)
         {            
             try
             {
-                var coach = _dbContext.Coaches?.SingleOrDefault(x => x.Id == id);
-                if (coach != null)
-                {
-                    _dbContext.Coaches?.Remove(coach);
-                    await _dbContext.SaveChangesAsync();                   
-                    return true;
-                }               
+                _dbContext.Coaches.Remove(entity);
+                await _dbContext.SaveChangesAsync();                   
+                return true;
             }
             catch(Exception ex)
             {
                 throw new Exception(ex.Message);
             }
-            return false;
         }
 
-
-        public async Task<ResponseDto> UpdateCoach(CoachDto request, int id)
+        public async Task<ResponseDto> UpdateCoach(Coach entity)
         {            
             ResponseDto response = new();            
             try
             {
-                var coach = await _dbContext.Coaches.FindAsync(id);             
-                coach = _mapper.Map<Coach>(request);
-                if (coach == null)
-                {                    
-                    response.Success = true;
-                    coach.Id = id;
-                    _dbContext.Coaches?.Update(coach);
-                    await _dbContext.SaveChangesAsync();
-                    return response;
-                }
+                _dbContext.Coaches.Update(entity);
+                await _dbContext.SaveChangesAsync();
+                return response;
             }
             catch (Exception ex)
             {
@@ -123,7 +102,12 @@ namespace Morrison_Gym.API.Services.CoachService
                 response.ErrorMessages = new List<string>() { ex.ToString() };
                 throw;
             }
-            return response;
+        }
+
+        public async Task<bool> isExists(int id)
+        {
+            var isExists = await _dbContext.Coaches.AnyAsync(x => x.Id == id);
+            return isExists;
         }
     }
 }

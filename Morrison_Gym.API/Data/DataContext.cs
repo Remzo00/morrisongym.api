@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Morrison_Gym.API.Models;
+using Morrison_Gym.API.Entities;
 
 namespace Morrison_Gym.API.Data
 {
