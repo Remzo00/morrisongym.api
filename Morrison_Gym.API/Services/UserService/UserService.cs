@@ -9,12 +9,10 @@ namespace Morrison_Gym.API.Services.UserService
 {
     public class UserService : IUserService
     {
-        private readonly DataContext _dbContext;
-        private readonly IMapper _mapper;
-        public UserService(DataContext dbContext, IMapper mapper)
+        private readonly DataContext _dbContext;        
+        public UserService(DataContext dbContext)
         {
-            _dbContext = dbContext;
-            _mapper = mapper;
+            _dbContext = dbContext;           
         }
         //To get all users details
         public async Task<ResponseDto> GetUsers()
@@ -22,9 +20,7 @@ namespace Morrison_Gym.API.Services.UserService
             ResponseDto response = new();
             try
             {              
-                var users =  await _dbContext.Users.ToListAsync();
-                response.Success = true;
-                response.Result = _mapper.Map<List<UserDto>>(users);
+                response.Result = await _dbContext.Users.ToListAsync();                          
                 return response;
             }
             catch(Exception ex)
@@ -35,7 +31,7 @@ namespace Morrison_Gym.API.Services.UserService
             }
         }
         //Get the details of a particular user
-        public async Task<ResponseDto> GetUserData(int id)
+        public async Task<ResponseDto> GetUserById(int id)
         {
             ResponseDto response = new();
             try
@@ -44,9 +40,8 @@ namespace Morrison_Gym.API.Services.UserService
                 if (user == null)
                 {
                     response.Message = "User not found.";
-                }
-                response.Success = true;
-                response.Result = _mapper.Map<UserDto>(user);
+                }                
+                response.Result = user;
                 return response;
             }
             catch(Exception ex)
@@ -57,57 +52,45 @@ namespace Morrison_Gym.API.Services.UserService
             }
         }
         //To add new user
-        public async Task<ResponseDto> AddUser(UserDto request)
+        public async Task<ResponseDto> AddUser(User entity)
         {
-            ResponseDto response = new();
-            User user = _mapper.Map<User>(request);
+            ResponseDto response = new();            
             try
-            {
-                response.Success = true;               
-                _dbContext.Users?.Add(user);
-                await _dbContext.SaveChangesAsync();                
+            {                              
+                _dbContext.Users.Add(entity);
+                await _dbContext.SaveChangesAsync();
+                return response;
             }
             catch (Exception ex)
             {
                 response.Success = false;
                 response.ErrorMessages = new List<string>() { ex.ToString() };
                 throw;                
-            }
-            return response;
+            }            
         }
         //Deleting user
-        public async Task<bool> DeleteUser(int id)
-        {            
+        public async Task<bool> DeleteUser(User entity)
+        {
             try
             {
-                var user = _dbContext.Users?.SingleOrDefault(x => x.Id == id);
-                if (user != null)
-                {
-                    _dbContext.Users?.Remove(user);
-                    await _dbContext.SaveChangesAsync();                    
-                    return true;
-                }                
+                _dbContext.Users.Remove(entity);
+                await _dbContext.SaveChangesAsync();
+                return true;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
-            return false;
         }
 
-        public async Task<ResponseDto> UpdateUser(UserDto request)
+        public async Task<ResponseDto> UpdateUser(User entity)
         {
-            ResponseDto response = new();
-            User user = _mapper.Map<User>(request);
+            ResponseDto response = new();            
             try
             {
-                if(user != null)
-                {
-                    response.Success = true;
-                    _dbContext.Users?.Update(user);
-                    await _dbContext.SaveChangesAsync();
-                    return response;
-                }                
+                _dbContext.Users.Update(entity);
+                await _dbContext.SaveChangesAsync();
+                return response;
             }
             catch (Exception ex)
             {
@@ -115,7 +98,15 @@ namespace Morrison_Gym.API.Services.UserService
                 response.ErrorMessages = new List<string>() { ex.ToString() };
                 throw;
             }
-            return response;
         }
+  
+
+        public async Task<bool> isExists(int id)
+        {
+            var isExists = await _dbContext.Users.AnyAsync(x => x.Id == id);
+            return isExists;
+        }
+
+      
     }
 }

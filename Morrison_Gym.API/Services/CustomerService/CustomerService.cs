@@ -10,11 +10,9 @@ namespace Morrison_Gym.API.Services.CustomerService
     public class CustomerService : ICustomerService
     {
         private readonly DataContext _dbContext;
-        private readonly IMapper _mapper;
-        public CustomerService(DataContext dbContext, IMapper mapper)
+        public CustomerService(DataContext dbContext)
         {
             _dbContext = dbContext;
-            _mapper = mapper;
         }
         
         //Get all Customers
@@ -22,10 +20,8 @@ namespace Morrison_Gym.API.Services.CustomerService
         {
             ResponseDto response = new();
             try
-            {                
-                var customers = await _dbContext.Customers.ToListAsync();
-                response.Success = true;
-                response.Result = _mapper.Map<List<CustomerDto>>(customers);
+            {     
+                response.Result = await _dbContext.Customers.ToListAsync();
                 return response;
             }
             catch (Exception ex)
@@ -36,7 +32,7 @@ namespace Morrison_Gym.API.Services.CustomerService
             }
         }
         //Get particular Customer
-        public async Task<ResponseDto> GetCustomerData(int id)
+        public async Task<ResponseDto> GetCustomerById(int id)
         {
             ResponseDto response = new();
             try
@@ -45,9 +41,8 @@ namespace Morrison_Gym.API.Services.CustomerService
                 if (customer == null)
                 {
                     response.Message = "User not found.";
-                }
-                response.Success = true;
-                response.Result = _mapper.Map<CustomerDto>(customer);
+                }               
+                response.Result = customer;
                 return response;
             }
             catch (Exception ex)
@@ -58,15 +53,14 @@ namespace Morrison_Gym.API.Services.CustomerService
             }
         }
         //Add Customer
-        public async Task<ResponseDto> AddCustomer(CustomerDto request)
+        public async Task<ResponseDto> AddCustomer(Customer entity)
         {
-            ResponseDto response = new();
-            Customer customer = _mapper.Map<Customer>(request);
+            ResponseDto response = new();            
             try
-            {
-                response.Success = true;                
-                _dbContext.Customers?.Add(customer);
+            {                                
+                _dbContext.Customers.Add(entity);
                 await _dbContext.SaveChangesAsync();
+                return response;
             }
             catch (Exception ex)
             {
@@ -74,50 +68,43 @@ namespace Morrison_Gym.API.Services.CustomerService
                 response.ErrorMessages = new List<string>() { ex.ToString() };
                 throw;
             }
-            return response;
         }
         //Update Customer
-        public async Task<ResponseDto> UpdateCustomer(CustomerDto request)
+        public async Task<ResponseDto> UpdateCustomer(Customer entity)
         {
-            ResponseDto response = new();
-            Customer customer = _mapper.Map<Customer>(request);
+            ResponseDto response = new();           
             try
             {
-                if (customer != null)
-                {
-                    response.Success = true;
-                    _dbContext.Customers?.Update(customer);
-                    await _dbContext.SaveChangesAsync();
-                    return response;
-                }
+                _dbContext.Customers.Update(entity);
+                await _dbContext.SaveChangesAsync();
+                return response;               
             }
             catch (Exception ex)
             {
                 response.Success = false;
                 response.ErrorMessages = new List<string>() { ex.ToString() };
                 throw;
-            }
-            return response;
+            }            
         }
         //Delete Customer
-        public async Task<bool> DeleteCustomer(int id)
+        public async Task<bool> DeleteCustomer(Customer entity)
         {            
             try
             {
-                var customer = _dbContext.Customers?.SingleOrDefault(x => x.Id == id);
-                if (customer != null)
-                {
-                    _dbContext.Customers?.Remove(customer);
-                    await _dbContext.SaveChangesAsync();                 
-                    return true;
-                }               
+                _dbContext.Customers.Remove(entity);
+                await _dbContext.SaveChangesAsync();
+                return true;                             
             }
             catch(Exception ex)
             {
                 throw new Exception(ex.Message);
-            }
-            return false;
-        }     
-       
+            }            
+        }
+
+        public async Task<bool> isExists(int id)
+        {
+            var isExists = await _dbContext.Customers.AnyAsync(x => x.Id == id);
+            return isExists;
+        }
     }
 }

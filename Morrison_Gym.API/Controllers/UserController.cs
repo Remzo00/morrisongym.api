@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Morrison_Gym.API.Dto;
+using Morrison_Gym.API.Entities;
 using Morrison_Gym.API.Models.Dto;
 using Morrison_Gym.API.Services.UserService;
 
@@ -12,10 +14,12 @@ namespace Morrison_Gym.API.Controllers
     {
         private readonly IUserService _userService;
         private ResponseDto _responseDto;
+        private readonly IMapper _mapper;
 
-        public UserController(IUserService userService)
+        public UserController(IUserService userService, IMapper mapper)
         {
             _userService = userService;
+            _mapper = mapper;
             _responseDto = new ResponseDto();
         }
 
@@ -25,7 +29,8 @@ namespace Morrison_Gym.API.Controllers
         {
             try
             {
-                _responseDto = await _userService.GetUsers();
+                var users = await _userService.GetUsers();
+                _responseDto.Result = _mapper.Map<IList<UserDto>>(users);
             }
             catch
             {
@@ -40,7 +45,8 @@ namespace Morrison_Gym.API.Controllers
         {
             try
             {
-                _responseDto = await _userService.GetUserData(id);
+                var user = await _userService.GetUsers();
+                _responseDto.Result = _mapper.Map<UserDto>(user);
             }
             catch (Exception ex)
             {
@@ -52,11 +58,20 @@ namespace Morrison_Gym.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddUser(UserDto userDto)
+        public async Task<IActionResult> AddUser(UserCreateDto userDto)
         {
             try
             {
-                _responseDto = await _userService.AddUser(userDto);
+                if (userDto == null)
+                {
+                    return BadRequest(ModelState);
+                }
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                var user = _mapper.Map<User>(userDto);
+                _responseDto.Result = await _userService.AddUser(user);
             }
             catch (Exception ex)
             {
@@ -68,11 +83,26 @@ namespace Morrison_Gym.API.Controllers
         }
 
         [HttpPut]
-        public async Task<IActionResult> UpdateUser(UserDto userDto)
+        [HttpGet("{id}")]
+        public async Task<IActionResult> UpdateUser(int id,UserUpdateDto userDto)
         {
             try
             {
-                _responseDto = await _userService.UpdateUser(userDto);
+                if (id < 1 || userDto == null || id != userDto.Id)
+                {
+                    return BadRequest();
+                }
+                var isExists = await _userService.isExists(id);
+                if (!isExists)
+                {
+                    return NotFound();
+                }
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                var user = _mapper.Map<User>(userDto);
+                _responseDto.Result = await _userService.UpdateUser(user);
             }
             catch(Exception ex)
             {
@@ -84,19 +114,31 @@ namespace Morrison_Gym.API.Controllers
         }
 
         [HttpDelete]
+        [HttpGet("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
             try
             {
-                _responseDto.Success = await _userService.DeleteUser(id);
+                if (id < 1)
+                {
+                    return BadRequest();
+                }
+                var isExists = await _userService.isExists(id);
+                if (!isExists)
+                {
+                    return NotFound();
+                }
+                var user = await _userService.GetUserById(id);
+                var userForDelete = _mapper.Map<User>(user.Result);
+                _responseDto.Success = await _userService.DeleteUser(userForDelete);
+                return NoContent();
             }
             catch (Exception ex)
             {
                 _responseDto.Success = false;
                 _responseDto.ErrorMessages = new List<string> { ex.ToString() };
                 return BadRequest(_responseDto);
-            }
-            return Ok(_responseDto);
+            }            
         }
     }    
 }
