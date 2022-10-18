@@ -1,9 +1,6 @@
-﻿using System.Reflection.Metadata.Ecma335;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Morrison_Gym.API.Dto;
-using Morrison_Gym.API.Entities;
 using Morrison_Gym.API.Services;
-using System.Threading;
 
 namespace Morrison_Gym.API.Controllers
 {
@@ -76,8 +73,7 @@ namespace Morrison_Gym.API.Controllers
             }
         }
 
-        [HttpPut]
-        [HttpGet("{id:int}")]
+        [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdateCoach(int id, CoachUpdateDto coachUpdateDto)
         {
             try
@@ -102,8 +98,7 @@ namespace Morrison_Gym.API.Controllers
             }
         }
 
-        [HttpDelete]
-        [HttpGet("{id:int}")]
+        [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteCoach(int id)
         {
             try
