@@ -1,113 +1,69 @@
-﻿using AutoMapper;
-using Microsoft.EntityFrameworkCore;
-using Morrison_Gym.API.Data;
+﻿using Mapster;
 using Morrison_Gym.API.Dto;
 using Morrison_Gym.API.Entities;
+using Morrison_Gym.API.Repository.Contract;
 
 namespace Morrison_Gym.API.Services.CoachService
 {
     public class CoachService : ICoachService
     {
-        private readonly DataContext _dbContext;
+        private readonly ResponseDto _response;
+        private readonly IRepositoryManager _repositoryManager;
 
-        public CoachService(DataContext dbContext)
+        public CoachService(IRepositoryManager repositoryManager)
         {
-            _dbContext = dbContext;
+            _repositoryManager = repositoryManager;
+            _response = new ResponseDto();
         }
 
-        //To get all coaches details
-        public async Task<ResponseDto> GetCoaches()
+        public async Task<IEnumerable<CoachDto>> GetAllAsync()
         {
-            ResponseDto response = new();
-            try
-            {
-                response.Result = await _dbContext.Coaches.ToListAsync();
-                return response;
-            }
-            catch (Exception ex)
-            {
-                response.Success = false;
-                response.ErrorMessages = new List<string>() { ex.ToString() };
-                throw;
-            }            
+            var coaches = await _repositoryManager.CoachRepository.GetAllAsync();
+
+            return coaches.Adapt<IEnumerable<CoachDto>>();
         }
 
-        //Get the details of a particular coach
-        public async Task<ResponseDto> GetCoachById(int id)
+        public async Task<CoachDto> GetByIdAsync(int coachId)
         {
-            ResponseDto response = new();
-            try
-            {                
-                var coach = await _dbContext.Coaches.FirstAsync(x => x.Id == id);
-                if (coach == null)
-                {
-                    response.Message = "User not found.";
-                }
-                response.Result = coach;
-                return response;
-            }
-            catch (Exception ex)
-            {
-                response.Success= false;
-                response.ErrorMessages = new List<string>() { ex.ToString() };
-                throw;
-            }
+            var coach = await _repositoryManager.CoachRepository.GetByIdAsync(coachId);
+            return coach.Adapt<CoachDto>();
         }
 
-        //Add Coach
-        public async Task<ResponseDto> AddCoach(Coach entity)
+        public async Task<ResponseDto> CreateAsync(CoachCreateDto coachCreateDto)
         {
-            ResponseDto response = new();
-            try
-            {                
-                _dbContext.Coaches.Add(entity);
-                await _dbContext.SaveChangesAsync();
-                return response;
-            }
-            catch (Exception ex)
-            {
-                response.Success = false;
-                response.ErrorMessages = new List<string>() { ex.ToString() };
-                throw;
-            }            
+            var coach = coachCreateDto.Adapt<Coach>();
+            _repositoryManager.CoachRepository.CreateCoach(coach);
+            var result = await _repositoryManager.UnitOfWork.SaveChangesAsync();
+            if (result != 0) return _response;
+            _response.Success = false;
+            _response.Message = "Error Creating Coach";
+            return _response;
         }
 
-        //Deleting Coach
-        public async Task<bool> DeleteCoach(Coach entity)
-        {            
-            try
-            {
-                _dbContext.Coaches.Remove(entity);
-                await _dbContext.SaveChangesAsync();                   
-                return true;
-            }
-            catch(Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
-        }
-
-        public async Task<ResponseDto> UpdateCoach(Coach entity)
-        {            
-            ResponseDto response = new();            
-            try
-            {
-                _dbContext.Coaches.Update(entity);
-                await _dbContext.SaveChangesAsync();
-                return response;
-            }
-            catch (Exception ex)
-            {
-                response.Success = false;
-                response.ErrorMessages = new List<string>() { ex.ToString() };
-                throw;
-            }
-        }
-
-        public async Task<bool> isExists(int id)
+        public async Task<ResponseDto> UpdateAsync(int coachId, CoachUpdateDto coachUpdateDto)
         {
-            var isExists = await _dbContext.Coaches.AnyAsync(x => x.Id == id);
-            return isExists;
+            var coachCheck = await _repositoryManager.CoachRepository.GetByIdAsync(coachId);
+            if (coachCheck is null)
+            {
+                _response.Success = false;
+                _response.Message = "Coach not found in database";
+                return _response;
+            }
+            var coach = coachUpdateDto.Adapt<Coach>();
+            _repositoryManager.CoachRepository.UpdateCoach(coach);
+
+            var result = await _repositoryManager.UnitOfWork.SaveChangesAsync();
+            if (result > 0) return _response;
+            _response.Success = false;
+            _response.Message = "Error Updating Coach";
+            return _response;
+        }
+
+        public async Task<bool> DeleteAsync(int coachId)
+        {
+            var coach = await _repositoryManager.CoachRepository.GetByIdAsync(coachId);
+            _repositoryManager.CoachRepository.DeleteCoachAsync(coach);
+            return await _repositoryManager.UnitOfWork.SaveChangesAsync() == 1;
         }
     }
 }
