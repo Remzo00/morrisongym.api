@@ -1,65 +1,60 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Morrison_Gym.API.Dto;
-using Morrison_Gym.API.Entities;
-using Morrison_Gym.API.Services.CoachService;
+using Morrison_Gym.API.Services;
 
 namespace Morrison_Gym.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/coach")]
     [ApiController]
     public class CoachController : ControllerBase
     {
-        private readonly ICoachService _coachService;
-        private ResponseDto _responseDto;
-        private readonly IMapper _mapper;
+        private readonly IServiceManager _serviceManager;
+        private ResponseDto _response;
 
-        public CoachController(ICoachService coachService, IMapper mapper)
+        public CoachController(IServiceManager serviceManager)
         {
-            _coachService = coachService;
-            _responseDto = new ResponseDto();
-            _mapper = mapper;
+            _serviceManager = serviceManager;
+            _response = new ResponseDto();
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> GetCoaches()
         {
             try
             {
-                var coaches = await _coachService.GetCoaches();
-                _responseDto.Result = _mapper.Map<IList<CoachDto>>(coaches);
+                var coaches = await _serviceManager.CoachService.GetAllAsync();
+                return Ok(coaches);
             }
-            catch
+            catch(Exception ex)
             {
-                _responseDto.Success = false;
-                return NotFound(_responseDto);
+                _response.Success = false;
+                _response.ErrorMessages = new List<string> { ex.ToString() };
+                return NotFound(_response);
             }
-            return Ok(_responseDto);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
             try
             {
-                var coach = await _coachService.GetCoaches();
-                _responseDto.Result = _mapper.Map<CoachDto>(coach);
+                var coach = await _serviceManager.CoachService.GetByIdAsync(id);
+                return Ok(coach);
             }
             catch (Exception ex)
             {
-                _responseDto.Success = false;
-                _responseDto.ErrorMessages = new List<string>() { ex.ToString() };
-                return BadRequest(_responseDto);
+                _response.Success = false;
+                _response.ErrorMessages = new List<string> { ex.ToString() };
+                return NotFound(_response);
             }
-            return Ok(_responseDto);
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddCoach(CoachCreateDto coachDto)
+        public async Task<IActionResult> CreateCoach(CoachCreateDto coachCreateDto)
         {
             try
             {
-                if (coachDto == null)
+                if (coachCreateDto is null)
                 {
                     return BadRequest(ModelState);
                 }
@@ -67,51 +62,43 @@ namespace Morrison_Gym.API.Controllers
                 {
                     return BadRequest(ModelState);
                 }
-                var coach = _mapper.Map<Coach>(coachDto);
-                _responseDto.Result = await _coachService.AddCoach(coach);
+                _response = await _serviceManager.CoachService.CreateAsync(coachCreateDto);
+                return Ok(_response);
             }
             catch (Exception ex)
             {
-                _responseDto.Success = false;
-                _responseDto.ErrorMessages = new List<string>() { ex.ToString() };
-                return BadRequest(_responseDto);
+                _response.Success = false;
+                _response.ErrorMessages = new List<string> { ex.ToString() };
+                return NotFound(_response);
             }
-            return Ok(_responseDto);
         }
 
-        [HttpPut]
-        [HttpGet("{id}")]
-        public async Task<IActionResult> UpdateCoach(int id, CoachUpdateDto coachDto)
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> UpdateCoach(int id, CoachUpdateDto coachUpdateDto)
         {
             try
             {
-                if (id < 1 || coachDto == null || id != coachDto.Id)
+                if (id < 1 || coachUpdateDto == null || id != coachUpdateDto.Id)
                 {
                     return BadRequest();
                 }
-                var isExists = await _coachService.isExists(id);
-                if (!isExists)
-                {
-                    return NotFound();
-                }
+                
                 if (!ModelState.IsValid)
                 {
                     return BadRequest(ModelState);
                 }
-                var coach = _mapper.Map<Coach>(coachDto);
-                _responseDto.Result = await _coachService.UpdateCoach(coach);
+                _response = await _serviceManager.CoachService.UpdateAsync(id, coachUpdateDto);
+                return Ok(_response);
             }
             catch (Exception ex)
             {
-                _responseDto.Success = false;
-                _responseDto.ErrorMessages = new List<string>() { ex.ToString() };
-                return BadRequest(_responseDto);
+                _response.Success = false;
+                _response.ErrorMessages = new List<string> { ex.ToString() };
+                return NotFound(_response);
             }
-            return Ok(_responseDto);
         }
 
-        [HttpDelete]
-        [HttpGet("{id}")]
+        [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteCoach(int id)
         {
             try
@@ -120,21 +107,18 @@ namespace Morrison_Gym.API.Controllers
                 {
                     return BadRequest();
                 }
-                var isExists = await _coachService.isExists(id);
-                if (!isExists)
-                {
-                    return NotFound();
-                }
-                var coach = await _coachService.GetCoachById(id);
-                var coachForDelete = _mapper.Map<Coach>(coach.Result);
-                _responseDto.Success = await _coachService.DeleteCoach(coachForDelete);
-                return NoContent();
+                _response.Success = await _serviceManager.CoachService.DeleteAsync(id);
+
+                if (_response.Success)
+                    return Ok(_response.Success);
+                else
+                    return NoContent();
             }
             catch (Exception ex)
             {
-                _responseDto.Success = false;
-                _responseDto.ErrorMessages = new List<string> { ex.ToString() };
-                return BadRequest(_responseDto);
+                _response.Success = false;
+                _response.ErrorMessages = new List<string> { ex.ToString() };
+                return NotFound(_response);
             }
         }
 

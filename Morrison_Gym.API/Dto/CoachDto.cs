@@ -18,7 +18,7 @@ namespace Morrison_Gym.API.Dto
         public string LastName { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
-        public User User { get; set; } = new();
+        public int UserId { get; set; } = new();
     }
 
     public class CoachUpdateDto
@@ -28,6 +28,6 @@ namespace Morrison_Gym.API.Dto
         public string LastName { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
-        public User User { get; set; } = new();
+        public int UserId { get; set; } = new();
     }
 }
