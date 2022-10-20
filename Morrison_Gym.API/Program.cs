@@ -2,37 +2,21 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Morrison_Gym.API;
-using Morrison_Gym.API.Controllers;
 using Morrison_Gym.API.Data;
-using Morrison_Gym.API.Services.AuthService;
-using Morrison_Gym.API.Services.CoachService;
-using Morrison_Gym.API.Services.CustomerService;
-using Morrison_Gym.API.Services.UserService;
+using Morrison_Gym.API.Repository;
+using Morrison_Gym.API.Repository.Contract;
+using Morrison_Gym.API.Services;
 using Swashbuckle.AspNetCore.Filters;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
-var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
-
-// Add services to the container.
-builder.Services.AddCors(options =>{
-    options.AddPolicy(name: MyAllowSpecificOrigins,
-                      policy =>
-                      {
-                          policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
-                      });
-});
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<ICustomerService, CustomerService>();
-builder.Services.AddScoped<ICoachService, CoachService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddAutoMapper(typeof(Maps));
+builder.Services.AddScoped<IRepositoryManager, RepositoryManager>();
+builder.Services.AddScoped<IServiceManager, ServiceManager>();
+
 builder.Services.AddSwaggerGen(options => {
     options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
     {
@@ -43,6 +27,22 @@ builder.Services.AddSwaggerGen(options => {
     });
     options.OperationFilter<SecurityRequirementsOperationFilter>();
 });
+
+#region MySQLConfiguration
+
+//var serverVersion = new MySqlServerVersion(new Version(8, 0, 26));
+//builder.Services.AddDbContextPool<DataContextContext>(o =>
+//{
+//    o.UseMySql("Server = localhost; Port = 3306; Initial Catalog = Gym; User Id = root; Password = ", serverVersion, mysqlOptions =>
+//        {
+//            mysqlOptions.EnableRetryOnFailure(1, TimeSpan.FromSeconds(5), null);
+//        }
+//    );
+//});
+
+#endregion
+
+
 
 builder.Services.AddDbContext<DataContext>(options =>
                 options.UseSqlServer(
@@ -63,11 +63,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 var app = builder.Build();
 
-//using (var scope = app.Services.CreateScope())
-//{
-//    var db = scope.ServiceProvider.GetRequiredService<DataContext>();
-//    db.Database.Migrate();
-//}
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<DataContext>();
+    db.Database.Migrate();
+}
 
 // Configure the HTTP request pipeline.
 app.UseSwagger();
@@ -77,7 +77,7 @@ app.UseHttpsRedirection();
 
 app.UseAuthentication();
 
-app.UseCors(MyAllowSpecificOrigins);
+app.UseCors(options => options.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
 app.UseAuthorization();
 
