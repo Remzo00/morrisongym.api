@@ -34,7 +34,7 @@ namespace Morrison_Gym.API.Controllers
             }
             catch
             {
-                _responseDto.Success = false;               
+                _responseDto.Success = false;
                 return NotFound(_responseDto);
             }
             return Ok(_responseDto);
@@ -84,7 +84,7 @@ namespace Morrison_Gym.API.Controllers
 
         [HttpPut]
         [HttpGet("{id}")]
-        public async Task<IActionResult> UpdateUser(int id,UserUpdateDto userDto)
+        public async Task<IActionResult> UpdateUser(int id, UserUpdateDto userDto)
         {
             try
             {
@@ -104,11 +104,11 @@ namespace Morrison_Gym.API.Controllers
                 var user = _mapper.Map<User>(userDto);
                 _responseDto.Result = await _userService.UpdateUser(user);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _responseDto.Success = false;
                 _responseDto.ErrorMessages = new List<string>() { ex.ToString() };
-                return BadRequest(_responseDto);               
+                return BadRequest(_responseDto);
             }
             return Ok(_responseDto);
         }
@@ -138,7 +138,7 @@ namespace Morrison_Gym.API.Controllers
                 _responseDto.Success = false;
                 _responseDto.ErrorMessages = new List<string> { ex.ToString() };
                 return BadRequest(_responseDto);
-            }            
+            }
         }
-    }    
+    }
 }

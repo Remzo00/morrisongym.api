@@ -1,8 +1,7 @@
 ﻿using Morrison_Gym.API.Dto;
 using Morrison_Gym.API.Entities;
-using Morrison_Gym.API.Models.Dto;
 
-namespace Morrison_Gym.API.Services.UserService
+namespace Morrison_Gym.API.Controllers
 {
     public interface IUserService
     {
