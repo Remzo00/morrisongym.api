@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Morrison_Gym.API;
+using Morrison_Gym.API.Controllers;
 using Morrison_Gym.API.Data;
 using Morrison_Gym.API.Services.AuthService;
 using Morrison_Gym.API.Services.CoachService;
