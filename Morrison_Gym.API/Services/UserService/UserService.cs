@@ -1,109 +1,72 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Mapster;
+using Microsoft.EntityFrameworkCore;
 using Morrison_Gym.API.Controllers;
 using Morrison_Gym.API.Data;
 using Morrison_Gym.API.Dto;
 using Morrison_Gym.API.Entities;
+using Morrison_Gym.API.Models.Dto;
+using Morrison_Gym.API.Repository.Contract;
 
 namespace Morrison_Gym.API.Services.UserService
 {
     public class UserService : IUserService
     {
-        private readonly DataContext _dbContext;
-        public UserService(DataContext dbContext)
+        private readonly ResponseDto _response;
+        private readonly IRepositoryManager _repositoryManager;
+        public UserService(IRepositoryManager repositoryManager)
         {
-            _dbContext = dbContext;
+            _repositoryManager = repositoryManager;
+            _response = new ResponseDto();
         }
         //To get all users details
-        public async Task<ResponseDto> GetUsers()
+        public async Task<IEnumerable<UserDto>> GetAllAsync()
         {
-            ResponseDto response = new();
-            try
-            {
-                response.Result = await _dbContext.Users.ToListAsync();
-                return response;
-            }
-            catch (Exception ex)
-            {
-                response.Success = false;
-                response.ErrorMessages = new List<string>() { ex.ToString() };
-                throw;
-            }
+            var users = await _repositoryManager.UserRepository.GetAllAsync();
+            return users.Adapt<IEnumerable<UserDto>>();
         }
         //Get the details of a particular user
-        public async Task<ResponseDto> GetUserById(int id)
+        public async Task<UserDto> GetByIdAsync(int userId)
         {
-            ResponseDto response = new();
-            try
-            {
-                var user = await _dbContext.Users.FirstAsync(x => x.Id == id);
-                if (user == null)
-                {
-                    response.Message = "User not found.";
-                }
-                response.Result = user;
-                return response;
-            }
-            catch (Exception ex)
-            {
-                response.Success = false;
-                response.ErrorMessages = new List<string>() { ex.ToString() };
-                throw;
-            }
+            var users = await _repositoryManager.UserRepository.GetAllAsync();
+
+            return users.Adapt<UserDto>();
         }
         //To add new user
-        public async Task<ResponseDto> AddUser(User entity)
+        public async Task<ResponseDto> CreateAsync(UserCreateDto userCreateDto)
         {
-            ResponseDto response = new();
-            try
-            {
-                _dbContext.Users.Add(entity);
-                await _dbContext.SaveChangesAsync();
-                return response;
-            }
-            catch (Exception ex)
-            {
-                response.Success = false;
-                response.ErrorMessages = new List<string>() { ex.ToString() };
-                throw;
-            }
+            var user = userCreateDto.Adapt<User>();
+            _repositoryManager.UserRepository.CreateUser(user);
+            var result = await _repositoryManager.UnitOfWork.SaveChangesAsync();
+            if (result != 0) return _response;
+            _response.Success = false;
+            _response.Message = "Error Creating User";
+            return _response;
         }
-        //Deleting user
-        public async Task<bool> DeleteUser(User entity)
+        //Updating user
+        public async Task<ResponseDto> UpdateAsync(int userId, UserUpdateDto userUpdateDto)
         {
-            try
+            var userCheck = await _repositoryManager.UserRepository.GetByIdAsync(userId);
+            if (userCheck is null)
             {
-                _dbContext.Users.Remove(entity);
-                await _dbContext.SaveChangesAsync();
-                return true;
+                _response.Success = false;
+                _response.Message = "User not found in database";
+                return _response;
             }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
-        }
+            var user = userUpdateDto.Adapt<User>();
+            _repositoryManager.UserRepository.UpdateUser(user);
 
-        public async Task<ResponseDto> UpdateUser(User entity)
-        {
-            ResponseDto response = new();
-            try
-            {
-                _dbContext.Users.Update(entity);
-                await _dbContext.SaveChangesAsync();
-                return response;
-            }
-            catch (Exception ex)
-            {
-                response.Success = false;
-                response.ErrorMessages = new List<string>() { ex.ToString() };
-                throw;
-            }
+            var result = await _repositoryManager.UnitOfWork.SaveChangesAsync();
+            if (result > 0) return _response;
+            _response.Success = false;
+            _response.Message = "Error Updating User";
+            return _response;
         }
 
-
-        public async Task<bool> isExists(int id)
+        public async Task<bool> DeleteAsync(int userId)
         {
-            var isExists = await _dbContext.Users.AnyAsync(x => x.Id == id);
-            return isExists;
+            var user = await _repositoryManager.UserRepository.GetByIdAsync(userId);
+            _repositoryManager.UserRepository.DeleteUserAsync(user);
+            return await _repositoryManager.UnitOfWork.SaveChangesAsync() == 1;
         }
     }
 }

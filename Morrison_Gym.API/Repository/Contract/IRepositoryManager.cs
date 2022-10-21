@@ -4,4 +4,5 @@ public interface IRepositoryManager
 {
     IUnitOfWork UnitOfWork { get; }
     ICoachRepository CoachRepository { get; }
+    IUserRepository UserRepository { get; }
 }
