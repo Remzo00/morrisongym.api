@@ -6,11 +6,10 @@ namespace Morrison_Gym.API.Services.CustomerService
 {
     public interface ICustomerService
     {
-        Task<ResponseDto> GetCustomers();
-        Task<ResponseDto> GetCustomerById(int id);
-        Task<ResponseDto> AddCustomer(Customer entity);
-        Task<ResponseDto> UpdateCustomer(Customer entity);
-        Task<bool> DeleteCustomer(Customer entity);
-        Task<bool> isExists(int id);         
+        Task<IEnumerable<CustomerDto>> GetAllAsync();
+        Task<CustomerDto> GetByIdAsync(int customerId);
+        Task<ResponseDto> CreateAsync(CustomerCreateDto customerCreateDto);
+        Task<ResponseDto> UpdateAsync(int customerId, CustomerUpdateDto customerUpdateDto);
+        Task<bool> DeleteAsync(int customerId);
     }
 }

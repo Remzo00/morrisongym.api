@@ -1,110 +1,72 @@
-﻿using AutoMapper;
+﻿using Mapster;
 using Microsoft.EntityFrameworkCore;
 using Morrison_Gym.API.Data;
 using Morrison_Gym.API.Dto;
 using Morrison_Gym.API.Entities;
 using Morrison_Gym.API.Models.Dto;
+using Morrison_Gym.API.Repository.Contract;
 
 namespace Morrison_Gym.API.Services.CustomerService
 {
     public class CustomerService : ICustomerService
     {
-        private readonly DataContext _dbContext;
-        public CustomerService(DataContext dbContext)
+        private readonly ResponseDto _response;
+        private readonly IRepositoryManager _repositoryManager;
+        public CustomerService(IRepositoryManager repositoryManager)
         {
-            _dbContext = dbContext;
-        }
-        
-        //Get all Customers
-        public async Task<ResponseDto> GetCustomers()
-        {
-            ResponseDto response = new();
-            try
-            {     
-                response.Result = await _dbContext.Customers.ToListAsync();
-                return response;
-            }
-            catch (Exception ex)
-            {
-                response.Success = false;
-                response.ErrorMessages = new List<string>() { ex.ToString() };
-                throw;
-            }
-        }
-        //Get particular Customer
-        public async Task<ResponseDto> GetCustomerById(int id)
-        {
-            ResponseDto response = new();
-            try
-            {                
-                var customer = await _dbContext.Customers.FirstAsync(x => x.Id == id);
-                if (customer == null)
-                {
-                    response.Message = "User not found.";
-                }               
-                response.Result = customer;
-                return response;
-            }
-            catch (Exception ex)
-            {
-                response.Success = false;
-                response.ErrorMessages = new List<string>() { ex.ToString() };
-                throw;
-            }
-        }
-        //Add Customer
-        public async Task<ResponseDto> AddCustomer(Customer entity)
-        {
-            ResponseDto response = new();            
-            try
-            {                                
-                _dbContext.Customers.Add(entity);
-                await _dbContext.SaveChangesAsync();
-                return response;
-            }
-            catch (Exception ex)
-            {
-                response.Success = false;
-                response.ErrorMessages = new List<string>() { ex.ToString() };
-                throw;
-            }
-        }
-        //Update Customer
-        public async Task<ResponseDto> UpdateCustomer(Customer entity)
-        {
-            ResponseDto response = new();           
-            try
-            {
-                _dbContext.Customers.Update(entity);
-                await _dbContext.SaveChangesAsync();
-                return response;               
-            }
-            catch (Exception ex)
-            {
-                response.Success = false;
-                response.ErrorMessages = new List<string>() { ex.ToString() };
-                throw;
-            }            
-        }
-        //Delete Customer
-        public async Task<bool> DeleteCustomer(Customer entity)
-        {            
-            try
-            {
-                _dbContext.Customers.Remove(entity);
-                await _dbContext.SaveChangesAsync();
-                return true;                             
-            }
-            catch(Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }            
+            _repositoryManager = repositoryManager;
+            _response = new ResponseDto();
         }
 
-        public async Task<bool> isExists(int id)
+        //Get all Customers
+        public async Task<IEnumerable<CustomerDto>> GetAllAsync()
         {
-            var isExists = await _dbContext.Customers.AnyAsync(x => x.Id == id);
-            return isExists;
+            var customers = await _repositoryManager.CustomerRepository.GetAllAsync();
+            return customers.Adapt<IEnumerable<CustomerDto>>();
+        }
+        //Get particular Customer
+        public async Task<CustomerDto> GetByIdAsync(int customerId)
+        {
+            var customers = await _repositoryManager.CustomerRepository.GetAllAsync();
+
+            return customers.Adapt<CustomerDto>();
+        }
+        //Add Customer
+        public async Task<ResponseDto> CreateAsync(CustomerCreateDto customerCreateDto)
+        {
+            var customer = customerCreateDto.Adapt<Customer>();
+            _repositoryManager.CustomerRepository.CreateCustomer(customer);
+            var result = await _repositoryManager.UnitOfWork.SaveChangesAsync();
+            if (result != 0) return _response;
+            _response.Success = false;
+            _response.Message = "Error Creating Customer";
+            return _response;
+        }
+        //Update Customer
+        public async Task<ResponseDto> UpdateAsync(int customerId, CustomerUpdateDto customerUpdateDto)
+        {
+            var customerCheck = await _repositoryManager.CustomerRepository.GetByIdAsync(customerId);
+            if (customerCheck is null)
+            {
+                _response.Success = false;
+                _response.Message = "Customer not found in database";
+                return _response;
+            }
+            var customer = customerUpdateDto.Adapt<Customer>();
+            _repositoryManager.CustomerRepository.UpdateCustomer(customer);
+
+            var result = await _repositoryManager.UnitOfWork.SaveChangesAsync();
+            if (result > 0) return _response;
+            _response.Success = false;
+            _response.Message = "Error Updating Customer";
+            return _response;
+        }
+        //Delete Customer
+        public async Task<bool> DeleteAsync(int customerId)
+        {
+            var customer = await _repositoryManager.CustomerRepository.GetByIdAsync(customerId);
+            _repositoryManager.CustomerRepository.DeleteCustomerAsync(customer);
+            return await _repositoryManager.UnitOfWork.SaveChangesAsync() == 1;
         }
     }
 }
