@@ -1,68 +1,63 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Morrison_Gym.API.Dto;
 using Morrison_Gym.API.Entities;
 using Morrison_Gym.API.Models.Dto;
-using Morrison_Gym.API.Services.UserService;
+using Morrison_Gym.API.Services;
 
 namespace Morrison_Gym.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/user")] 
     [ApiController]
     public class UserController : ControllerBase
     {
-        private readonly IUserService _userService;
-        private ResponseDto _responseDto;
-        private readonly IMapper _mapper;
+        private readonly IServiceManager _serviceManager;
+        private ResponseDto _response;
 
-        public UserController(IUserService userService, IMapper mapper)
+        public UserController(IServiceManager serviceManager)
         {
-            _userService = userService;
-            _mapper = mapper;
-            _responseDto = new ResponseDto();
+            _serviceManager = serviceManager;
+            _response = new ResponseDto();
         }
 
         [HttpGet]
-        [Authorize(Roles = "Admin,Coach")]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> GetUsers()
         {
             try
             {
-                var users = await _userService.GetUsers();
-                _responseDto.Result = _mapper.Map<IList<UserDto>>(users);
+                var users = await _serviceManager.UserService.GetAllAsync();
+                return Ok(users);
             }
-            catch
+            catch (Exception ex)
             {
-                _responseDto.Success = false;
-                return NotFound(_responseDto);
+                _response.Success = false;
+                _response.ErrorMessages = new List<string> { ex.ToString() };
+                return NotFound(_response);
             }
-            return Ok(_responseDto);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
             try
             {
-                var user = await _userService.GetUsers();
-                _responseDto.Result = _mapper.Map<UserDto>(user);
+                var user = await _serviceManager.UserService.GetByIdAsync(id);
+                return Ok(user);
             }
             catch (Exception ex)
             {
-                _responseDto.Success = false;
-                _responseDto.ErrorMessages = new List<string>() { ex.ToString() };
-                return BadRequest(_responseDto);
+                _response.Success = false;
+                _response.ErrorMessages = new List<string> { ex.ToString() };
+                return NotFound(_response);
             }
-            return Ok(_responseDto);
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddUser(UserCreateDto userDto)
+        public async Task<IActionResult> CreateUser(UserCreateDto userCreateDto)
         {
             try
             {
-                if (userDto == null)
+                if (userCreateDto is null)
                 {
                     return BadRequest(ModelState);
                 }
@@ -70,51 +65,43 @@ namespace Morrison_Gym.API.Controllers
                 {
                     return BadRequest(ModelState);
                 }
-                var user = _mapper.Map<User>(userDto);
-                _responseDto.Result = await _userService.AddUser(user);
+                _response = await _serviceManager.UserService.CreateAsync(userCreateDto);
+                return Ok(_response);
             }
             catch (Exception ex)
             {
-                _responseDto.Success = false;
-                _responseDto.ErrorMessages = new List<string>() { ex.ToString() };
-                return BadRequest(_responseDto);
+                _response.Success = false;
+                _response.ErrorMessages = new List<string> { ex.ToString() };
+                return NotFound(_response);
             }
-            return Ok(_responseDto);
         }
 
-        [HttpPut]
-        [HttpGet("{id}")]
-        public async Task<IActionResult> UpdateUser(int id, UserUpdateDto userDto)
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> UpdateUser(int id, UserUpdateDto userUpdateDto)
         {
             try
             {
-                if (id < 1 || userDto == null || id != userDto.Id)
+                if (id < 1 || userUpdateDto == null || id != userUpdateDto.Id)
                 {
                     return BadRequest();
                 }
-                var isExists = await _userService.isExists(id);
-                if (!isExists)
-                {
-                    return NotFound();
-                }
+
                 if (!ModelState.IsValid)
                 {
                     return BadRequest(ModelState);
                 }
-                var user = _mapper.Map<User>(userDto);
-                _responseDto.Result = await _userService.UpdateUser(user);
+                _response = await _serviceManager.UserService.UpdateAsync(id, userUpdateDto);
+                return Ok(_response);
             }
             catch (Exception ex)
             {
-                _responseDto.Success = false;
-                _responseDto.ErrorMessages = new List<string>() { ex.ToString() };
-                return BadRequest(_responseDto);
+                _response.Success = false;
+                _response.ErrorMessages = new List<string> { ex.ToString() };
+                return NotFound(_response);
             }
-            return Ok(_responseDto);
         }
 
-        [HttpDelete]
-        [HttpGet("{id}")]
+        [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
             try
@@ -123,21 +110,18 @@ namespace Morrison_Gym.API.Controllers
                 {
                     return BadRequest();
                 }
-                var isExists = await _userService.isExists(id);
-                if (!isExists)
-                {
-                    return NotFound();
-                }
-                var user = await _userService.GetUserById(id);
-                var userForDelete = _mapper.Map<User>(user.Result);
-                _responseDto.Success = await _userService.DeleteUser(userForDelete);
-                return NoContent();
+                _response.Success = await _serviceManager.UserService.DeleteAsync(id);
+
+                if (_response.Success)
+                    return Ok(_response.Success);
+                else
+                    return NoContent();
             }
             catch (Exception ex)
             {
-                _responseDto.Success = false;
-                _responseDto.ErrorMessages = new List<string> { ex.ToString() };
-                return BadRequest(_responseDto);
+                _response.Success = false;
+                _response.ErrorMessages = new List<string> { ex.ToString() };
+                return NotFound(_response);
             }
         }
     }
