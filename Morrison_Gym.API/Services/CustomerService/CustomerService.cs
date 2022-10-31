@@ -1,6 +1,4 @@
 ﻿using Mapster;
-using Microsoft.EntityFrameworkCore;
-using Morrison_Gym.API.Data;
 using Morrison_Gym.API.Dto;
 using Morrison_Gym.API.Entities;
 using Morrison_Gym.API.Models.Dto;

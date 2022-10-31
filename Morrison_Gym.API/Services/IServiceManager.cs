@@ -1,4 +1,5 @@
 ﻿using Morrison_Gym.API.Controllers;
+using Morrison_Gym.API.Services.AuthService;
 using Morrison_Gym.API.Services.CoachService;
 using Morrison_Gym.API.Services.CustomerService;
 
@@ -9,4 +10,5 @@ public interface IServiceManager
     ICoachService CoachService { get; }
     IUserService UserService { get; }
     ICustomerService CustomerService { get; }
+    IAuthService AuthService { get; }
 }

@@ -1,8 +1,7 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Morrison_Gym.API.Dto;
 using Morrison_Gym.API.Models.Dto;
-using Morrison_Gym.API.Services.AuthService;
+using Morrison_Gym.API.Services;
 
 namespace Morrison_Gym.API.Controllers
 {
@@ -10,45 +9,53 @@ namespace Morrison_Gym.API.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly IAuthService _authService;
-        protected ResponseDto _response;
+        private readonly IServiceManager _serviceManager;
+        private ResponseDto _response;
 
-        public AuthController(IAuthService authService, IMapper mapper)
+        public AuthController(IServiceManager serviceManager)
         {
-            _authService = authService;
-            this._response = new ResponseDto();
+            _serviceManager = serviceManager;
+            _response = new ResponseDto();
         }
 
-        [HttpPost("Register")]
-        public async Task<IActionResult> Register(UserDto request)
+        [HttpPost("registration")]
+        public async Task<IActionResult> Register(UserRegisterDto registerDto)
         {
             try
             {
-                _response = await _authService.Register(request);
-            }catch (Exception ex)
+                if (registerDto is null)
+                {
+                    return BadRequest(ModelState);
+                }
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                _response = await _serviceManager.AuthService.Register(registerDto);
+                return Ok(_response);
+            }
+            catch (Exception ex)
             {
                 _response.Success = false;
-                _response.ErrorMessages = new List<string> { ex.ToString()};
+                _response.ErrorMessages = new List<string> { ex.ToString() };
+                return NotFound(_response);
             }
-            return Ok(_response);
         } 
 
-        [HttpPost("Login")]
-        public async Task<IActionResult> Login(Guid request)
+        [HttpPost("login")]
+        public async Task<IActionResult> Login(Guid userCode)
         {
             try
             {
-                _response = await _authService.Login(request);
-                if (!_response.Success)
-                {
-                    return BadRequest(_response);
-                }
-            }catch (Exception ex)
+                _response = await _serviceManager.AuthService.Login(userCode);
+                return Ok(_response);
+            }
+            catch (Exception ex)
             {
                 _response.Success = false;
-                _response.ErrorMessages = new List<string>() { ex.ToString() };
+                _response.ErrorMessages = new List<string> { ex.ToString() };
+                return NotFound(_response);
             }
-            return Ok(_response);
         }
     }
 }

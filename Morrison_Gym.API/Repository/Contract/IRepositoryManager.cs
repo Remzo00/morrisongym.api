@@ -6,4 +6,5 @@ public interface IRepositoryManager
     ICoachRepository CoachRepository { get; }
     IUserRepository UserRepository { get; }
     ICustomerRepository CustomerRepository { get; }
+    IAuthRepository AuthRepository { get; }
 }
