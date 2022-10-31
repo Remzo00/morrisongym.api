@@ -42,7 +42,7 @@ namespace Morrison_Gym.API.Controllers
             }
         } 
 
-        [HttpPost("login")]
+        [HttpGet("login")]
         public async Task<IActionResult> Login(Guid userCode)
         {
             try
