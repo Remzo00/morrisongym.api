@@ -6,6 +6,6 @@ namespace Morrison_Gym.API.Services.AuthService
     public interface IAuthService
     {
         Task<ResponseDto> Login(Guid code);
-        Task<ResponseDto> Register(UserDto userDto);
+        Task<ResponseDto> Register(UserRegisterDto userDto);
     }
 }

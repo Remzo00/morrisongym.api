@@ -19,11 +19,6 @@ namespace Morrison_Gym.API.Repository
             return (await FindByCondition(x => x.Id == userId).Include(u => u.Id).SingleOrDefaultAsync())!;
         }
 
-        public void CreateUser(User user)
-        {
-            Create(user);
-        }
-
         public void UpdateUser(User user)
         {
             Update(user);

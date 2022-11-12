@@ -1,7 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Morrison_Gym.API.Dto;
-using Morrison_Gym.API.Entities;
 using Morrison_Gym.API.Models.Dto;
 using Morrison_Gym.API.Services;
 
@@ -43,30 +41,6 @@ namespace Morrison_Gym.API.Controllers
             {
                 var user = await _serviceManager.UserService.GetByIdAsync(id);
                 return Ok(user);
-            }
-            catch (Exception ex)
-            {
-                _response.Success = false;
-                _response.ErrorMessages = new List<string> { ex.ToString() };
-                return NotFound(_response);
-            }
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> CreateUser(UserCreateDto userCreateDto)
-        {
-            try
-            {
-                if (userCreateDto is null)
-                {
-                    return BadRequest(ModelState);
-                }
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-                _response = await _serviceManager.UserService.CreateAsync(userCreateDto);
-                return Ok(_response);
             }
             catch (Exception ex)
             {

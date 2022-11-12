@@ -1,97 +1,79 @@
-﻿using AutoMapper;
-using Microsoft.EntityFrameworkCore;
+﻿using Mapster;
 using Microsoft.IdentityModel.Tokens;
-using Morrison_Gym.API.Data;
 using Morrison_Gym.API.Dto;
 using Morrison_Gym.API.Entities;
-using Morrison_Gym.API.Models;
-using Morrison_Gym.API.Dto;
+using Morrison_Gym.API.Models.Dto;
+using Morrison_Gym.API.Repository.Contract;
+using Morrison_Gym.API.Services.TokenService;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Morrison_Gym.API.Models.Dto;
 
 namespace Morrison_Gym.API.Services.AuthService
 {
     public class AuthService : IAuthService
     {
-        private readonly DataContext _dataContext;
-        private readonly IConfiguration _configuration;
-        private readonly IMapper _mapper;
+        private readonly ResponseDto _response;
+        private readonly IRepositoryManager _repositoryManager;
+        private readonly ITokenService _tokenService;
 
-        public AuthService(DataContext dataContext, IConfiguration configuration, IMapper mapper)
+        public AuthService(IRepositoryManager repositoryManager,
+            ITokenService tokenService)
         {
-            _dataContext = dataContext;
-            _configuration = configuration;
-            _mapper = mapper;
+            _repositoryManager = repositoryManager;
+            _tokenService = tokenService;
+            _response = new ResponseDto();
         }
+
         public async Task<ResponseDto> Login(Guid code)
         {
-            ResponseDto response = new();
             try
             {
-                var user = await _dataContext.Users.SingleOrDefaultAsync(x => x.UserCode == code);
-                if(user == null)
+                var user = await _repositoryManager.AuthRepository.Login(code);
+                if(user is null)
                 {
-                    response.Success = false;
-                    response.Message = "User not found";
+                    _response.Success = false;
+                    _response.Message = "User not found";
                 }
 
-                if (user != null) response.Result = await CreateToken(user);
-                return response;
-            }catch (Exception ex)
+                var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.NameIdentifier, user?.Id.ToString()),
+                    new Claim(ClaimTypes.Name, user?.UserName),
+                    new Claim(ClaimTypes.Role, user?.Role?.Name ?? throw new InvalidOperationException()),
+                };
+
+                _response.Result = _tokenService.GenerateAccessToken(claims);
+                return _response;
+            }
+
+            catch (Exception ex)
             {
-                response.Success = false;
-                response.ErrorMessages = new List<string> { ex.ToString() };
-                return response;
+                _response.Success = false;
+                _response.ErrorMessages = new List<string> { ex.ToString() };
+                return _response;
             }
         }
 
-        public async Task<ResponseDto> Register(UserDto userDto)
+        public async Task<ResponseDto> Register(UserRegisterDto userDto)
         {
-            ResponseDto response = new();
             try
             {
-                var user = _mapper.Map<User>(userDto);
-                user.Role = await _dataContext.Roles.SingleOrDefaultAsync((x => x.Id == user.RoleId));
+                var user = userDto.Adapt<User>();
                 user.UserCode = Guid.NewGuid();
-                _dataContext.Users.Add(user);
-                await _dataContext.SaveChangesAsync();
-                return response;
+                _repositoryManager.AuthRepository.CreateUser(user);
+                var result = await _repositoryManager.UnitOfWork.SaveChangesAsync();
+                if (result != 0) return _response;
+                _response.Success = false;
+                _response.Message = "Could not register user";
+                return _response;
             }
             catch (Exception ex)
             {
-                response.Success = false;
-                response.ErrorMessages = new List<string> { ex.ToString() };
-                return response;
+                _response.Success = false;
+                _response.ErrorMessages = new List<string> { ex.ToString() };
+                return _response;
             }
-        }
-
-        private async Task<string> CreateToken(User user)
-        {
-            var role = await _dataContext.Roles.SingleOrDefaultAsync(x => x.Id == user.RoleId);
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.UserName),
-            };
-
-            if (role != null) claims.Add(new Claim(ClaimTypes.Role, role.Name));
-
-            var key = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(_configuration.GetSection("Jwt:Key").Value));
-
-            var signingCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.Now.AddDays(1),
-                SigningCredentials = signingCredentials,
-            };
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-
-            return tokenHandler.WriteToken(token);
         }
     }
 }

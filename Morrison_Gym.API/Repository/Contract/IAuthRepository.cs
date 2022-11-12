@@ -1,8 +1,10 @@
-﻿namespace Morrison_Gym.API.Repository.Contract
+﻿using Morrison_Gym.API.Entities;
+
+namespace Morrison_Gym.API.Repository.Contract
 {
-    public interface IAuthRepository
+    public interface IAuthRepository : IBaseRepository<User>
     {
-        void Register() { }
-        void Login() { }
+        Task<User> Login(Guid code);
+        void CreateUser(User user);
     }
 }
